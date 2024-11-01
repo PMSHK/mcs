@@ -1,4 +1,3 @@
 databaseChangeLog:
-  - changeSet:
-      id: 0
-      author: admin
+  - include:
+      file: db/changelog/changeset/radiation_type_V001.sql
