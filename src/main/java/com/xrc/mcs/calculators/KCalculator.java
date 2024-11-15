@@ -14,16 +14,15 @@ import org.springframework.stereotype.Component;
 @Valid
 @Slf4j
 public class KCalculator implements Computable<Double, KParamDto> {
-    private final Computable<Double, Double> kermaCalculator;
 
     @Override
     public Double compute(KParamDto param) {
-        return (Math.pow(10, 3) * calculateK(param.getVoltage()) * param.getWorkLoad() * param.getDirectionCoefficient()) / (30 * Math.pow(param.getDistance(), 2) * param.getDmd());
+        return (Math.pow(10, 3) * param.getKerma() * param.getWorkLoad() * param.getDirectionCoefficient()) / (30 * Math.pow(param.getDistance(), 2) * param.getDmd());
     }
 
-    private Double calculateK(Double voltage) {
-        log.info("Calculated kerma for voltage: {} ", voltage);
-        return kermaCalculator.compute(voltage);
+    @Override
+    public Class<KParamDto> getParameterType() {
+        return KParamDto.class;
     }
 
 }

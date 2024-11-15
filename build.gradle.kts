@@ -6,18 +6,9 @@ plugins {
 
 group = "com.xrc"
 version = "0.0.1-SNAPSHOT"
+java.sourceCompatibility = JavaVersion.VERSION_17
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
 
-configurations {
-	compileOnly {
-		extendsFrom(configurations.annotationProcessor.get())
-	}
-}
 
 repositories {
 	mavenCentral()
@@ -43,12 +34,16 @@ dependencies {
 	implementation("com.fasterxml.jackson.core:jackson-databind:2.18.0")
 	implementation("org.slf4j:slf4j-api:2.0.16")
 
-	implementation("org.projectlombok:lombok")
+	implementation("org.projectlombok:lombok:1.18.28")
 	runtimeOnly("org.postgresql:postgresql")
-	implementation("org.mapstruct:mapstruct:1.5.3.Final")
-	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
-	annotationProcessor("org.projectlombok:lombok")
+	implementation("org.mapstruct:mapstruct:1.5.5.Final")
+	annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+	annotationProcessor("org.projectlombok:lombok:1.18.28")
 	implementation("org.liquibase:liquibase-core")
+	implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")
+	implementation("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+
 
 	/**
 	 * Test containers
@@ -66,6 +61,11 @@ dependencies {
 	testImplementation("org.assertj:assertj-core:3.26.3")
 	testImplementation("org.junit.platform:junit-platform-launcher")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+	/**
+	 * Swagger
+	 */
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 }
 
 dependencyManagement {

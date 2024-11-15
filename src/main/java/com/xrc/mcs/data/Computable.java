@@ -1,5 +1,9 @@
 package com.xrc.mcs.data;
 
-public interface Computable<T,E> {
+import com.xrc.mcs.dto.CalculatorDto;
+
+public interface Computable<T, E extends CalculatorDto> {
     T compute(E val);
+
+    Class<E> getParameterType();
 }

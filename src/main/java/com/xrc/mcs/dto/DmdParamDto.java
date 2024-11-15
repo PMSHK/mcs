@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class DmdParamDto {
+public class DmdParamDto extends CalculatorDto{
     private int t;
     private double p;
     private double tc;
