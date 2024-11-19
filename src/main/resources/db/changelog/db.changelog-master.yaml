@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changeset/radiation_type_V001.sql
   - include:
       file: db/changelog/changeset/person_category_V002.sql
+  - include:
+      file: db/changelog/changeset/lead_equivalent_V003.sql
