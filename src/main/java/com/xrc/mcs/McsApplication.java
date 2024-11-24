@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
-@EnableFeignClients("com.xrc.mcs.client")
+//@EnableFeignClients("com.xrc.mcs.client")
 public class McsApplication {
 
 	public static void main(String[] args) {

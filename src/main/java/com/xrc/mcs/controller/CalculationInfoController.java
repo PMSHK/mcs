@@ -7,9 +7,7 @@ import com.xrc.mcs.services.RoomCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,21 +35,19 @@ public class CalculationInfoController {
     public List<Double> getDirectionCoefficient() {
         return directions.getValues();
     }
+
     @GetMapping("/room_categories")
     public List<String> getRoomCategories() {
         return roomCategoryService.findAll();
     }
+
     @GetMapping("/dmd")
     public Double getDmdByRoomCategory(@RequestParam(name = "room_category") String roomCategory) {
         return roomCategoryService.findDmdByRoomCategoryName(roomCategory);
     }
+
     @PostMapping("/lead_equivalent_thickness")
     public double getLeadEquivalentThickness(@RequestBody @Valid LeadEquivalentParamDto dto) {
         return leadEquivalentService.getLeadEquivalentThickness(dto.getVoltage(), dto.getAttenuationFrequency());
     }
-
-//    @PostMapping("/lead_param")
-//    public List<LeadEquivalentParamDto> getLeadEquivalents(@RequestParam(name = "voltage") long voltage, @RequestParam(name = "attenuation") long attenuation) {
-//        return leadEquivalentService.getLeadParameters(voltage,attenuation);
-//    }
 }
