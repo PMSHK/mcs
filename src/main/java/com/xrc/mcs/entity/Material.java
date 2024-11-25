@@ -19,15 +19,15 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "voltage")
-public class Voltage {
+@Table(name = "material")
+public class Material {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "value")
-    private double value;
-    @OneToMany(mappedBy = "voltage")
-    private List<LeadEquivalent> leadEquivalentList;
-    @OneToMany(mappedBy = "voltage")
+    @Column(length = 256, name = "name")
+    private String name;
+    @Column(name = "density")
+    private float density;
+    @OneToMany(mappedBy = "material")
     private List<MaterialThickness> materialThicknessList;
 }
