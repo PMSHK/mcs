@@ -24,7 +24,7 @@ public class MaterialThickness {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "thickness")
-    private float thickness;
+    private double thickness;
     @ManyToOne()
     @JoinColumn(nullable = false, name = "voltage_id")
     private Voltage voltage;

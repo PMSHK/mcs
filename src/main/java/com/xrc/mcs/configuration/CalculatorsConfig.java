@@ -1,5 +1,6 @@
 package com.xrc.mcs.configuration;
 
+import com.xrc.mcs.calculators.formuls.Regression;
 import com.xrc.mcs.data.Computable;
 import com.xrc.mcs.dto.CalculatorDto;
 import com.xrc.mcs.enums.Direction;
@@ -29,5 +30,10 @@ public class CalculatorsConfig {
     @Bean
     public Direction directions(){
         return Direction.DIRECT;
+    }
+
+    @Bean
+    public Regression regression(){
+        return new Regression();
     }
 }

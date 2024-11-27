@@ -66,6 +66,11 @@ dependencies {
 	 * Swagger
 	 */
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+	/**
+	 *
+	 */
+	implementation("org.apache.commons:commons-math3:3.6.1")
 }
 
 dependencyManagement {
