@@ -25,7 +25,7 @@ public class MaterialDto {
     @Positive (message = "Значение не может быть меньше 0")
     private double thickness;
     @Nullable
-    @Positive (message = "Значение не может быть меньше 0")
+//    @Positive (message = "Значение не может быть меньше 0")
     private double leadEquivalent;
     @Nullable
     @Positive (message = "Напряжение не может быть меньше 0кВ")

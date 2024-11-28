@@ -30,3 +30,6 @@ data:
   max_attenuation_frequency: 10000000
   min_attenuation_frequency: 1
   doubleFormat: '#.##'
+  number_places: 2
+  low_ren_limit: 0.25
+  not_demanded_protection: "Не требуется"

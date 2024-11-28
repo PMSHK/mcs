@@ -16,6 +16,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 
 public class CalculatorsConfig {
+
+
     private final List<Computable<?, ? extends CalculatorDto>> computables;
 
     @Bean(name = "calculatorsMap")
@@ -28,12 +30,12 @@ public class CalculatorsConfig {
     }
 
     @Bean
-    public Direction directions(){
+    public Direction directions() {
         return Direction.DIRECT;
     }
 
     @Bean
-    public Regression regression(){
+    public Regression regression() {
         return new Regression();
     }
 }
