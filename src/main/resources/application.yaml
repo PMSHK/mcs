@@ -32,4 +32,5 @@ data:
   doubleFormat: '#.##'
   number_places: 2
   low_ren_limit: 0.25
+  low_window_limit: 2.5
   not_demanded_protection: "Не требуется"

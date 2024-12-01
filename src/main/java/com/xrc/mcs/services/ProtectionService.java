@@ -31,7 +31,7 @@ public class ProtectionService {
         return protectionUtilService.getAllMaterials();
     }
 
-    public double getMaterialLeadEquivalent(MaterialDto dto) {
+    public Double getMaterialLeadEquivalent(MaterialDto dto) {
         List<MaterialDto> list = protectionUtilService.getMaterialParamsOnVoltage(dto);
         double leadEquivalent = 0;
         if (list.isEmpty()) {
@@ -53,11 +53,33 @@ public class ProtectionService {
         return roundNumber(result, precision);
     }
 
+    public double getMatThicknessByVoltageLeadEqv(MaterialDto dto) {
+        List<MaterialDto> list = protectionUtilService.getMaterialParamsOnVoltage(dto);
+        double leadEquivalent = 0;
+        if (list.isEmpty()) {
+            return leadEquivalent;
+        }
+
+        if (list.get(list.size() - 1).getLeadEquivalent() < dto.getLeadEquivalent()) {
+            log.info("there is no such big lead equivalent: {} for {}", dto.getLeadEquivalent(), dto.getName());
+            log.info("lead equivalent will be regressed");
+            Double[] lowerThickness = list.stream().map(MaterialDto::getThickness).toArray(Double[]::new);
+            Double[] lowerLeadEquivalent = list.stream().map(MaterialDto::getLeadEquivalent).toArray(Double[]::new);
+            return roundNumber(regression.solve(dto.getLeadEquivalent(), lowerLeadEquivalent, lowerThickness), precision);
+        }
+        MaterialDto[] lowHighRangeMaterials = protectionUtilService.getLowerHigherRangeMaterials(dto.getLeadEquivalent(), list);
+        log.info("lower lead equivalent: {}, higher lead equivalent: {}, recent lead equivalent: {}", lowHighRangeMaterials[0], lowHighRangeMaterials[0], dto.getLeadEquivalent());
+        double result = interpolate(lowHighRangeMaterials[0].getLeadEquivalent(), lowHighRangeMaterials[0].getThickness(),
+                lowHighRangeMaterials[1].getLeadEquivalent(), lowHighRangeMaterials[1].getThickness(),
+                dto.getLeadEquivalent());
+        return roundNumber(result, precision);
+    }
+
     public String getAdditionalProtection(ResultLeadEquivalentDto dto) {
 
         if (dto.getCalculatedLeadEquivalent() <= lowRenLimit &&
                 dto.getExistedLeadEquivalent() <= lowRenLimit) {
-            return String.valueOf(roundNumber(lowRenLimit - dto.getExistedLeadEquivalent(),precision));
+            return String.valueOf(roundNumber(lowRenLimit - dto.getExistedLeadEquivalent(), precision));
         }
         double leadEquivalent = dto.getCalculatedLeadEquivalent() - dto.getExistedLeadEquivalent();
         if (leadEquivalent <= 0) {
@@ -66,5 +88,10 @@ public class ProtectionService {
 
         return String.valueOf(leadEquivalent);
     }
+
+//    private String getLeadEquivalentByLimit(double leadEquivalent, double limit) {
+//        int result = getIntegerRelativeToLimit(leadEquivalent, limit);
+//        return limit == 0 ? String.valueOf(leadEquivalent) : result + " слоя";
+//    }
 
 }

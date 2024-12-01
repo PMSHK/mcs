@@ -11,21 +11,21 @@ import static com.xrc.mcs.calculators.formuls.NumberFormatter.roundNumber;
 
 @Component
 @Setter
-public class Door implements Opening {
+public class Shutter implements Opening {
     @Value(value = "${data.low_ren_limit}")
     private double lowLimit;
     private String leadProtectionLevel;
 
     @Override
     public String getLeadProtectionLevel(double calculatedLeadEquivalent, double precision) {
-        return "Pb = " + getEquivalent(calculatedLeadEquivalent,precision) + " мм.";
+        return "Pb = " + getEquivalent(calculatedLeadEquivalent, precision) + " мм.";
     }
 
     private double getEquivalent(double value, double step) {
         if (value <= lowLimit) {
             return lowLimit;
         }
-        return roundNumber(getValueRelativeToStep(value, step),getPrecision(step));
+        int precision = 0;
+        return roundNumber(getValueRelativeToStep(value, step), getPrecision(step));
     }
-
 }

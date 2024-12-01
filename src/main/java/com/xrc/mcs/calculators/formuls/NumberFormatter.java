@@ -7,6 +7,6 @@ public class NumberFormatter {
     public static <T> double roundNumber(T value, int places) {
         if (places < 0) throw new IllegalArgumentException();
         BigDecimal bd = new BigDecimal(String.valueOf(value));
-        return bd.setScale(places, RoundingMode.UP).doubleValue();
+        return bd.setScale(places, RoundingMode.HALF_UP).doubleValue();
     }
 }

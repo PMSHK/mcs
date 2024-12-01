@@ -79,7 +79,7 @@ public class ProtectionUtilService {
         for (int i = 0; i < leftList.size(); i++) {
             MaterialDto materialDto = new MaterialDto(dto.getName(), dto.getDensity(),
                     interpolate(leftList.get(i).getVoltage(), leftList.get(i).getThickness(), rightList.get(i).getVoltage(), rightList.get(i).getThickness(), dto.getVoltage()),
-                    leftList.get(i).getLeadEquivalent(), dto.getVoltage());
+                    leftList.get(i).getLeadEquivalent(), dto.getVoltage(), dto.getLimit());
             log.info("materialDto: {} was initialized for voltage {}", materialDto, dto.getVoltage());
             materialDtoList.add(materialDto);
             log.info("materialDtoList got a new materialDto {} for voltage {}", materialDto, dto.getVoltage());
@@ -88,13 +88,20 @@ public class ProtectionUtilService {
     }
 
     private Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
-        List<Object[]> results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
+        List<Object[]> results = new ArrayList<>();
+        if(dto.getThickness()!=0) {
+            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
+        }
+        if(dto.getLeadEquivalent()!=0) {
+            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(),dto.getLeadEquivalent());
+        }
         log.info("got all parameters for material {} from database", dto.getName());
         return results.stream().map(result -> new MaterialDto(dto.getName(),
                         ((BigDecimal) result[0]).doubleValue(),     //density
                         ((BigDecimal) result[1]).doubleValue(),    //thickness
                         ((BigDecimal) result[2]).doubleValue(),    //leadEquivalent
-                        ((Long) result[3])    //voltage
+                        ((Long) result[3]),    //voltage
+                        dto.getLimit()
                 )).
                 collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
     }

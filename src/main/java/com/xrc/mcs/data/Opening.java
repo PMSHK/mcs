@@ -1,14 +1,7 @@
 package com.xrc.mcs.data;
 
-import lombok.Getter;
+public interface Opening {
 
-@Getter
-public abstract class Opening {
-    private final String name;
+    String getLeadProtectionLevel(double calculatedLeadEquivalent, double precision);
 
-    public Opening(String name) {
-        this.name = name;
-    }
-
-    public abstract String getLeadProtectionLevel();
 }

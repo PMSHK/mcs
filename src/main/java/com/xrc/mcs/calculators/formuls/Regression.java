@@ -17,4 +17,13 @@ public class Regression {
         }
         return sr.predict(x.doubleValue());
     }
+    public <T extends Number> int solve1(T value, T minValue) {
+        double reminder = value.doubleValue() % minValue.doubleValue();
+        int result = 0;
+        if (reminder!=0){
+            return (int) ( value.doubleValue()/minValue.doubleValue() + 1);
+        }
+        return (int) ( value.doubleValue()/minValue.doubleValue());
+    }
+
 }

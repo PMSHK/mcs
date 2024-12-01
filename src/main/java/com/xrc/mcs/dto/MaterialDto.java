@@ -22,7 +22,7 @@ public class MaterialDto {
     @Positive (message = "Значение не может быть меньше 0")
     private double density;
     @Nullable
-    @Positive (message = "Значение не может быть меньше 0")
+//    @Positive (message = "Значение не может быть меньше 0")
     private double thickness;
     @Nullable
 //    @Positive (message = "Значение не может быть меньше 0")
@@ -32,6 +32,9 @@ public class MaterialDto {
     @Min(value = 50, message = "Напряжение не может быть меньше 50кВ")
     @Max(value = 250, message = "Напряжение не может быть больше 250кВ")
     private double voltage;
+    @Nullable
+    @Builder.Default
+    private double limit = 0;
 
     @Override
     public boolean equals(Object o) {
