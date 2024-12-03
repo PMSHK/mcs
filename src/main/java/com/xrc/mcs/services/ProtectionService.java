@@ -2,10 +2,12 @@ package com.xrc.mcs.services;
 
 import com.xrc.mcs.calculators.formuls.Regression;
 import com.xrc.mcs.dto.MaterialDto;
+import com.xrc.mcs.dto.MaterialInfoDto;
 import com.xrc.mcs.dto.ResultLeadEquivalentDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +29,8 @@ public class ProtectionService {
     private final ProtectionUtilService protectionUtilService;
     private final Regression regression;
 
-    public List<String> getAllMaterials() {
+
+    public List<MaterialInfoDto> getAllMaterials() {
         return protectionUtilService.getAllMaterials();
     }
 
@@ -88,10 +91,5 @@ public class ProtectionService {
 
         return String.valueOf(leadEquivalent);
     }
-
-//    private String getLeadEquivalentByLimit(double leadEquivalent, double limit) {
-//        int result = getIntegerRelativeToLimit(leadEquivalent, limit);
-//        return limit == 0 ? String.valueOf(leadEquivalent) : result + " слоя";
-//    }
 
 }

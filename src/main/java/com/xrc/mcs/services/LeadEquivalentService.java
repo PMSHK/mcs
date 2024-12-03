@@ -5,6 +5,7 @@ import com.xrc.mcs.repository.LeadEquivalentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -41,7 +42,8 @@ public class LeadEquivalentService {
         return Double.parseDouble(new DecimalFormat(doubleFormat).format(interpolate(v1, th1, v2, th2, voltage)));
     }
 
-    private List<LeadEquivalentParamDto> getLeadParameters(double voltage, double attenuationFrequency) {
+    @Cacheable(value = "leadParameters", key = "#voltage + #attenuationFrequency")
+    public List<LeadEquivalentParamDto> getLeadParameters(double voltage, double attenuationFrequency) {
         if (attenuationFrequency >= maxAttenuationFrequency) {
             attenuationFrequency = (maxAttenuationFrequency - 0.1);
         }

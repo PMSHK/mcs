@@ -2,11 +2,13 @@ package com.xrc.mcs.services;
 
 import com.xrc.mcs.calculators.formuls.Regression;
 import com.xrc.mcs.dto.MaterialDto;
+import com.xrc.mcs.dto.MaterialInfoDto;
 import com.xrc.mcs.mapper.MaterialMapper;
 import com.xrc.mcs.repository.MaterialRepository;
 import com.xrc.mcs.repository.MaterialThicknessRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,8 +31,10 @@ public class ProtectionUtilService {
     private final MaterialMapper materialMapper;
     private final Regression regression;
 
-    public List<String> getAllMaterials() {
-        return materialRepository.findAll().stream().map(material -> material.getName() + ", " + material.getDensity()).toList();
+    @Cacheable(value = "materials")
+    public List<MaterialInfoDto> getAllMaterials() {
+        log.info("get all materials from DB");
+        return materialRepository.findAll().stream().map(material -> new MaterialInfoDto(material.getName(), material.getDensity())).toList();
     }
 
     public MaterialDto[] getLowerHigherRangeMaterials(double thickness, List<MaterialDto> list) {
@@ -87,13 +91,16 @@ public class ProtectionUtilService {
         return materialDtoList;
     }
 
-    private Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
+    @Cacheable(value = "materialParamsForVoltage")
+    public Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
         List<Object[]> results = new ArrayList<>();
-        if(dto.getThickness()!=0) {
+        if (dto.getThickness() != 0) {
             results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
+            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
         }
-        if(dto.getLeadEquivalent()!=0) {
-            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(),dto.getLeadEquivalent());
+        if (dto.getLeadEquivalent() != 0) {
+            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(), dto.getLeadEquivalent());
         }
         log.info("got all parameters for material {} from database", dto.getName());
         return results.stream().map(result -> new MaterialDto(dto.getName(),

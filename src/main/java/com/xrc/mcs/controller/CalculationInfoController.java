@@ -26,11 +26,6 @@ public class CalculationInfoController {
     private final RoomCategoryService roomCategoryService;
     private final LeadEquivalentService leadEquivalentService;
 
-//    @GetMapping("/materials")
-//    public List<MaterialDto> getAllMatSamples() {
-//
-//    }
-
     @GetMapping("/direction_coefficient")
     public List<Double> getDirectionCoefficient() {
         return directions.getValues();

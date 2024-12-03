@@ -43,6 +43,7 @@ dependencies {
 	implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.0")
 	implementation("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 	annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
+	implementation("redis.clients:jedis:4.3.2")
 
 
 	/**

@@ -1,6 +1,7 @@
 package com.xrc.mcs.controller;
 
 import com.xrc.mcs.dto.MaterialDto;
+import com.xrc.mcs.dto.MaterialInfoDto;
 import com.xrc.mcs.dto.ResultLeadEquivalentDto;
 import com.xrc.mcs.services.OpeningsService;
 import com.xrc.mcs.services.ProtectionService;
@@ -26,7 +27,7 @@ public class ProtectionController {
     private final OpeningsService openingsService;
 
     @GetMapping("/all_materials")
-    public List<String> allMaterials() {
+    public List<MaterialInfoDto> allMaterials() {
         return protectionService.getAllMaterials();
     }
 
