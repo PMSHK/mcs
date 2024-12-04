@@ -1,5 +1,6 @@
 package com.xrc.mcs.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -10,20 +11,25 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.lang.Nullable;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class MaterialDto {
+public class MaterialDto implements Serializable {
+    @JsonProperty("name")
     @Length(min = 1, max = 255, message = "Имя должно быть не более 256 символов и не менее 1")
     private String name;
+    @JsonProperty("density")
     @Positive (message = "Значение не может быть меньше 0")
     private double density;
+    @JsonProperty("thickness")
     @Nullable
 //    @Positive (message = "Значение не может быть меньше 0")
     private double thickness;
+    @JsonProperty("leadEquivalent")
     @Nullable
 //    @Positive (message = "Значение не может быть меньше 0")
     private double leadEquivalent;

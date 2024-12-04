@@ -3,13 +3,13 @@ package com.xrc.mcs.services;
 import com.xrc.mcs.dto.RadiationTypeDto;
 import com.xrc.mcs.enums.RadiationTypes;
 import com.xrc.mcs.mapper.RadiationTypeMapper;
+import com.xrc.mcs.repository.ProtectionCacheRepository;
 import com.xrc.mcs.repository.RadiationTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,17 +18,25 @@ import java.util.List;
 public class RadiationTypeService {
     private final RadiationTypeRepository radiationTypeRepository;
     private final RadiationTypeMapper mapper;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ProtectionCacheRepository pcRepository;
 
-    @Cacheable(value = "radiationTypes")
     public List<String> getAllRadiationTypes(RadiationTypes type) {
-        log.info("Got radiation types from DB");
-        return radiationTypeRepository.getAllNamesByTypes(type);
+        List<String> typeslList = pcRepository.getFromCache("radiationTypes", ArrayList.class);
+        if (typeslList == null) {
+            log.info("Got radiation types from DB");
+            typeslList = radiationTypeRepository.getAllNamesByTypes(type);
+            pcRepository.saveToCache("radiationTypes", typeslList);
+        }
+        return typeslList;
     }
 
-    @Cacheable(value = "radiationTypeInfo",cacheManager = "cacheManager")
     public RadiationTypeDto getRadiationTypeInfo(String name, RadiationTypes type) {
-        log.info("Got details of radiation type {} from DB", name);
-        return mapper.toDto(radiationTypeRepository.getRadiationParamsByTypeAndName(type, name));
+        RadiationTypeDto radiationTypeDto = pcRepository.getFromCache(type + ": radiationTypeInfo: " + name, RadiationTypeDto.class);
+        if (radiationTypeDto == null) {
+            log.info("Got details of radiation type {} from DB", name);
+            radiationTypeDto = mapper.toDto(radiationTypeRepository.getRadiationParamsByTypeAndName(type, name));
+            pcRepository.saveToCache(type + ": radiationTypeInfo: " + name, radiationTypeDto);
+        }
+        return radiationTypeDto;
     }
 }

@@ -2,6 +2,7 @@ package com.xrc.mcs.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
+@RequiredArgsConstructor
 public class RedisConfiguration {
     @Value(value = "${spring.data.redis.host}")
     private String host;
@@ -33,13 +36,15 @@ public class RedisConfiguration {
     private int port;
     @Value(value = "${spring.data.redis.ttl}")
     private String ttl;
+    private final ObjectMapper mcsObjectMapper;
+
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(JedisConnectionFactory factory,GenericJackson2JsonRedisSerializer serializer) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
+    public RedisTemplate<String, String> redisTemplate(JedisConnectionFactory factory,GenericJackson2JsonRedisSerializer serializer) {
+        RedisTemplate<String, String> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(serializer);
+        template.setValueSerializer(new StringRedisSerializer());
         return template;
     }
 
@@ -53,7 +58,7 @@ public class RedisConfiguration {
         return RedisCacheConfiguration.defaultCacheConfig().
                 entryTtl(Duration.parse(ttl)).disableCachingNullValues().
                 enableTimeToIdle().
-                serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
+                serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()));
     }
 
     @Primary
@@ -68,13 +73,11 @@ public class RedisConfiguration {
 
     @Bean
     public GenericJackson2JsonRedisSerializer serializer() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL
-        );
-        mapper.findAndRegisterModules();
-        return new GenericJackson2JsonRedisSerializer( mapper);
+//        objectMapper .activateDefaultTyping(
+//                LaissezFaireSubTypeValidator.instance,
+//                ObjectMapper.DefaultTyping.NON_FINAL
+//        );
+//        objectMapper.findAndRegisterModules();
+        return new GenericJackson2JsonRedisSerializer(mcsObjectMapper);
     }
-
 }

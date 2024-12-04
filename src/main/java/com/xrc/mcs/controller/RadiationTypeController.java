@@ -32,7 +32,7 @@ public class RadiationTypeController {
     }
 
     @GetMapping("/{name}")
-    public RadiationTypeDto getRadiationType(@PathVariable String name, @RequestParam(name = "type") String type) {
+    public RadiationTypeDto getRadiationType(@PathVariable String name, @RequestParam(name = "type",required = false, defaultValue = "MED") String type) {
         log.info("getRadiationType");
         return radiationTypeService.getRadiationTypeInfo(name, RadiationTypes.valueOf(type));
     }

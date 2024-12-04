@@ -1,19 +1,25 @@
 package com.xrc.mcs.services;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xrc.mcs.calculators.formuls.Regression;
 import com.xrc.mcs.dto.MaterialDto;
 import com.xrc.mcs.dto.MaterialInfoDto;
 import com.xrc.mcs.mapper.MaterialMapper;
 import com.xrc.mcs.repository.MaterialRepository;
 import com.xrc.mcs.repository.MaterialThicknessRepository;
+import com.xrc.mcs.repository.ProtectionCacheRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,11 +36,16 @@ public class ProtectionUtilService {
     private final MaterialThicknessRepository materialThicknessRepository;
     private final MaterialMapper materialMapper;
     private final Regression regression;
+    private final ProtectionCacheRepository pcRepository;
 
-    @Cacheable(value = "materials")
     public List<MaterialInfoDto> getAllMaterials() {
-        log.info("get all materials from DB");
-        return materialRepository.findAll().stream().map(material -> new MaterialInfoDto(material.getName(), material.getDensity())).toList();
+        List<MaterialInfoDto> materialList = pcRepository.getFromCache("materials", ArrayList.class);
+        if (materialList == null) {
+            log.info("get all materials from DB");
+            materialList = materialRepository.findAll().stream().map(material -> new MaterialInfoDto(material.getName(), material.getDensity())).toList();
+            pcRepository.saveToCache("materials", materialList);
+        }
+        return materialList;
     }
 
     public MaterialDto[] getLowerHigherRangeMaterials(double thickness, List<MaterialDto> list) {
@@ -91,25 +102,50 @@ public class ProtectionUtilService {
         return materialDtoList;
     }
 
-    @Cacheable(value = "materialParamsForVoltage")
-    public Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
-        List<Object[]> results = new ArrayList<>();
-        if (dto.getThickness() != 0) {
-            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
-            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+//    @Cacheable(value = "materialParamsForVoltage")
+
+    private Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
+        Map<Double, List<MaterialDto>> matParametersList = pcRepository.getFromCache("MatParams: "+dto.getName()+dto.getVoltage()+dto.getThickness()+dto.getLeadEquivalent(), LinkedHashMap.class );
+        if(matParametersList == null) {
+            List<Object[]> results = new ArrayList<>();
+            if (dto.getThickness() != 0) {
+                results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
+                log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+            }
+            if (dto.getLeadEquivalent() != 0) {
+                log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+                results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(), dto.getLeadEquivalent());
+            }
+            log.info("got all parameters for material {} from database", dto.getName());
+            matParametersList = results.stream().map(result -> new MaterialDto(dto.getName(),
+                            ((BigDecimal) result[0]).doubleValue(),     //density
+                            ((BigDecimal) result[1]).doubleValue(),    //thickness
+                            ((BigDecimal) result[2]).doubleValue(),    //leadEquivalent
+                            ((Long) result[3]),    //voltage
+                            dto.getLimit()
+                    )).
+                    collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
+            pcRepository.saveToCache("MatParams: "+dto.getName()+dto.getVoltage()+dto.getThickness()+dto.getLeadEquivalent(), matParametersList);
         }
-        if (dto.getLeadEquivalent() != 0) {
-            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
-            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(), dto.getLeadEquivalent());
-        }
-        log.info("got all parameters for material {} from database", dto.getName());
-        return results.stream().map(result -> new MaterialDto(dto.getName(),
-                        ((BigDecimal) result[0]).doubleValue(),     //density
-                        ((BigDecimal) result[1]).doubleValue(),    //thickness
-                        ((BigDecimal) result[2]).doubleValue(),    //leadEquivalent
-                        ((Long) result[3]),    //voltage
-                        dto.getLimit()
-                )).
-                collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
+        return matParametersList;
+
+//        List<Object[]> results = new ArrayList<>();
+//        if (dto.getThickness() != 0) {
+//            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
+//            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+//        }
+//        if (dto.getLeadEquivalent() != 0) {
+//            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
+//            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(), dto.getLeadEquivalent());
+//        }
+//        log.info("got all parameters for material {} from database", dto.getName());
+//        return results.stream().map(result -> new MaterialDto(dto.getName(),
+//                        ((BigDecimal) result[0]).doubleValue(),     //density
+//                        ((BigDecimal) result[1]).doubleValue(),    //thickness
+//                        ((BigDecimal) result[2]).doubleValue(),    //leadEquivalent
+//                        ((Long) result[3]),    //voltage
+//                        dto.getLimit()
+//                )).
+//                collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
     }
 }
