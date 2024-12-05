@@ -1,7 +1,5 @@
 package com.xrc.mcs.services;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xrc.mcs.calculators.formuls.Regression;
 import com.xrc.mcs.dto.MaterialDto;
 import com.xrc.mcs.dto.MaterialInfoDto;
@@ -11,15 +9,11 @@ import com.xrc.mcs.repository.MaterialThicknessRepository;
 import com.xrc.mcs.repository.ProtectionCacheRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,46 +61,50 @@ public class ProtectionUtilService {
     }
 
     public List<MaterialDto> getMaterialParamsOnVoltage(MaterialDto dto) {
-        log.info("started to calculate lead equivalent of {}", dto.getName());
-        List<MaterialDto> materialDtoList = new ArrayList<>();
-        Map<Double, List<MaterialDto>> matParametersList = getAllMatParamForVoltage(dto);
-        if (matParametersList.isEmpty()) {
-            log.info("Parameters for {} was not found", dto.getName());
-            return Collections.emptyList();
+        List<MaterialDto> materialDtoList = pcRepository.getListFromCache(dto.getName() + " params: " + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), MaterialDto.class);
+        if (materialDtoList == null) {
+            log.info("get {} params from DB", dto.getName());
+            log.info("started to calculate lead equivalent of {}", dto.getName());
+            materialDtoList = new ArrayList<>();
+            Map<Double, List<MaterialDto>> matParametersList = getAllMatParamForVoltage(dto);
+            if (matParametersList.isEmpty()) {
+                log.info("Parameters for {} was not found", dto.getName());
+                return Collections.emptyList();
+            }
+            if (matParametersList.containsKey(dto.getVoltage())) {
+                materialDtoList = matParametersList.get(dto.getVoltage());
+                log.info("{} params found for recent voltage {}", dto.getName(), dto.getVoltage());
+                return materialDtoList;
+            }
+            Set<Double> keys = matParametersList.keySet();
+            List<MaterialDto> leftList = new ArrayList<>();
+            List<MaterialDto> rightList = new ArrayList<>();
+            Optional<Double> leftKey = keys.stream().filter(key -> key <= dto.getVoltage()).findFirst();
+            Optional<Double> rightKey = keys.stream().filter(key -> key > dto.getVoltage()).findFirst();
+            if (leftKey.isPresent() && rightKey.isPresent()) {
+                leftList = matParametersList.get(leftKey.get());
+                rightList = matParametersList.get(rightKey.get());
+            } else {
+                log.info("Parameters for {} was not found", dto.getName());
+                return Collections.emptyList();
+            }
+            for (int i = 0; i < leftList.size(); i++) {
+                MaterialDto materialDto = new MaterialDto(dto.getName(), dto.getDensity(),
+                        interpolate(leftList.get(i).getVoltage(), leftList.get(i).getThickness(), rightList.get(i).getVoltage(), rightList.get(i).getThickness(), dto.getVoltage()),
+                        leftList.get(i).getLeadEquivalent(), dto.getVoltage(), dto.getLimit());
+                log.info("materialDto: {} was initialized for voltage {}", materialDto, dto.getVoltage());
+                materialDtoList.add(materialDto);
+                log.info("materialDtoList got a new materialDto {} for voltage {}", materialDto, dto.getVoltage());
+            }
+            pcRepository.saveToCache(dto.getName() + " params: " + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), materialDtoList);
         }
-        if (matParametersList.containsKey(dto.getVoltage())) {
-            materialDtoList = matParametersList.get(dto.getVoltage());
-            log.info("{} params found for recent voltage {}", dto.getName(), dto.getVoltage());
-            return materialDtoList;
-        }
-        Set<Double> keys = matParametersList.keySet();
-        List<MaterialDto> leftList = new ArrayList<>();
-        List<MaterialDto> rightList = new ArrayList<>();
-        Optional<Double> leftKey = keys.stream().filter(key -> key <= dto.getVoltage()).findFirst();
-        Optional<Double> rightKey = keys.stream().filter(key -> key > dto.getVoltage()).findFirst();
-        if (leftKey.isPresent() && rightKey.isPresent()) {
-            leftList = matParametersList.get(leftKey.get());
-            rightList = matParametersList.get(rightKey.get());
-        } else {
-            log.info("Parameters for {} was not found", dto.getName());
-            return Collections.emptyList();
-        }
-        for (int i = 0; i < leftList.size(); i++) {
-            MaterialDto materialDto = new MaterialDto(dto.getName(), dto.getDensity(),
-                    interpolate(leftList.get(i).getVoltage(), leftList.get(i).getThickness(), rightList.get(i).getVoltage(), rightList.get(i).getThickness(), dto.getVoltage()),
-                    leftList.get(i).getLeadEquivalent(), dto.getVoltage(), dto.getLimit());
-            log.info("materialDto: {} was initialized for voltage {}", materialDto, dto.getVoltage());
-            materialDtoList.add(materialDto);
-            log.info("materialDtoList got a new materialDto {} for voltage {}", materialDto, dto.getVoltage());
-        }
+
         return materialDtoList;
     }
 
-//    @Cacheable(value = "materialParamsForVoltage")
-
     private Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
-        Map<Double, List<MaterialDto>> matParametersList = pcRepository.getFromCache("MatParams: "+dto.getName()+dto.getVoltage()+dto.getThickness()+dto.getLeadEquivalent(), LinkedHashMap.class );
-        if(matParametersList == null) {
+        Map<Double, List<MaterialDto>> matParametersList = pcRepository.getMapFromCache("MatParams: " + dto.getName() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), Double.class, MaterialDto.class);
+        if (matParametersList == null) {
             List<Object[]> results = new ArrayList<>();
             if (dto.getThickness() != 0) {
                 results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
@@ -125,27 +123,9 @@ public class ProtectionUtilService {
                             dto.getLimit()
                     )).
                     collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
-            pcRepository.saveToCache("MatParams: "+dto.getName()+dto.getVoltage()+dto.getThickness()+dto.getLeadEquivalent(), matParametersList);
+            pcRepository.saveToCache("MatParams: " + dto.getName() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), matParametersList);
         }
         return matParametersList;
 
-//        List<Object[]> results = new ArrayList<>();
-//        if (dto.getThickness() != 0) {
-//            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage());
-//            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
-//        }
-//        if (dto.getLeadEquivalent() != 0) {
-//            log.info("got list of parameters of material {} on voltage from DB", dto.getName());
-//            results = materialThicknessRepository.getAllMatThicknessesOnVoltage(dto.getName(), dto.getVoltage(), dto.getLeadEquivalent());
-//        }
-//        log.info("got all parameters for material {} from database", dto.getName());
-//        return results.stream().map(result -> new MaterialDto(dto.getName(),
-//                        ((BigDecimal) result[0]).doubleValue(),     //density
-//                        ((BigDecimal) result[1]).doubleValue(),    //thickness
-//                        ((BigDecimal) result[2]).doubleValue(),    //leadEquivalent
-//                        ((Long) result[3]),    //voltage
-//                        dto.getLimit()
-//                )).
-//                collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
     }
 }

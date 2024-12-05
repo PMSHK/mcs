@@ -1,11 +1,6 @@
 package com.xrc.mcs;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
@@ -28,6 +23,7 @@ public class McsApplication {
 //                ObjectMapper.DefaultTyping.NON_FINAL,
 //                JsonTypeInfo.As.PROPERTY
 //        );
+
         objectMapper.findAndRegisterModules();
         return objectMapper;
     }

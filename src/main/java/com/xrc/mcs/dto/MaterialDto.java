@@ -1,6 +1,5 @@
 package com.xrc.mcs.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -19,22 +18,22 @@ import java.util.Objects;
 @NoArgsConstructor
 @Builder
 public class MaterialDto implements Serializable {
-    @JsonProperty("name")
+    //    @JsonProperty("name")
     @Length(min = 1, max = 255, message = "Имя должно быть не более 256 символов и не менее 1")
     private String name;
-    @JsonProperty("density")
-    @Positive (message = "Значение не может быть меньше 0")
+    //    @JsonProperty("density")
+    @Positive(message = "Значение не может быть меньше 0")
     private double density;
-    @JsonProperty("thickness")
+    //    @JsonProperty("thickness")
     @Nullable
 //    @Positive (message = "Значение не может быть меньше 0")
     private double thickness;
-    @JsonProperty("leadEquivalent")
+    //    @JsonProperty("leadEquivalent")
     @Nullable
 //    @Positive (message = "Значение не может быть меньше 0")
     private double leadEquivalent;
     @Nullable
-    @Positive (message = "Напряжение не может быть меньше 0кВ")
+    @Positive(message = "Напряжение не может быть меньше 0кВ")
     @Min(value = 50, message = "Напряжение не может быть меньше 50кВ")
     @Max(value = 250, message = "Напряжение не может быть больше 250кВ")
     private double voltage;
