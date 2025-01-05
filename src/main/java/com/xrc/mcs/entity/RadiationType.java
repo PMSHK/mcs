@@ -24,12 +24,12 @@ public class RadiationType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(length = 1000, nullable = false)
+    @Column(name="name",length = 1000, nullable = false)
     private String name;
-    @Column(nullable = false)
+    @Column(name="voltage",nullable = false)
     private long voltage;
-    @Column(nullable = false)
-    private long radiationExit;
+    @Column(name="radiation_exit",nullable = false)
+    private long workload;
     @Column(length = 4, nullable = false)
     @Enumerated(EnumType.STRING)
     private RadiationTypes type;

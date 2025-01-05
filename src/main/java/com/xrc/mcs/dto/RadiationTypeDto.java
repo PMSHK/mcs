@@ -20,5 +20,5 @@ public class RadiationTypeDto implements Serializable {
     @Max(value = 250, message = "Максимальное расчётное напряжение 250кВ")
     @Min(value = 40, message = "Минимальное расчётное напряжение 40кВ")
     private long voltage;
-    private long radiationExit;
+    private long workload;
 }
