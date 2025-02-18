@@ -1,8 +1,11 @@
 package com.xrc.mcs.services;
 
+import com.xrc.mcs.calculators.KCalculator;
 import com.xrc.mcs.calculators.formuls.Regression;
+import com.xrc.mcs.dto.KParamDto;
 import com.xrc.mcs.dto.MaterialDto;
 import com.xrc.mcs.dto.MaterialInfoDto;
+import com.xrc.mcs.dto.ProtectionDto;
 import com.xrc.mcs.dto.ResultLeadEquivalentDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +30,7 @@ public class ProtectionService {
 
     private final ProtectionUtilService protectionUtilService;
     private final Regression regression;
-
+    private final LeadEquivalentService leadEquivalentService;
 
     public List<MaterialInfoDto> getAllMaterials() {
         return protectionUtilService.getAllMaterials();
@@ -89,6 +92,15 @@ public class ProtectionService {
         }
 
         return String.valueOf(leadEquivalent);
+    }
+
+    public ProtectionDto getProtectionKAndLeadEquivalent(KParamDto param){
+        ProtectionDto dto = new ProtectionDto();
+        KCalculator calculator = new KCalculator();
+        double attenuationFrequency = calculator.compute(param);
+        dto.setWeaknessCoefficient(attenuationFrequency);
+        dto.setLeadEqv(leadEquivalentService.getLeadEquivalentThickness(param.getVoltage(), attenuationFrequency));
+        return dto;
     }
 
 }

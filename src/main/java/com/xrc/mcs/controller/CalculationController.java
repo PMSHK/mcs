@@ -5,6 +5,7 @@ import com.xrc.mcs.dto.KParamDto;
 import com.xrc.mcs.dto.KermaParamDto;
 import com.xrc.mcs.dto.ProtectionDto;
 import com.xrc.mcs.services.CalculationService;
+import com.xrc.mcs.services.ProtectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -20,11 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Validated
 public class CalculationController {
     private final CalculationService calculationService;
+    private final ProtectionService protectionService;
 
     @PostMapping("/protection")
     public ProtectionDto getProtection(@RequestBody KParamDto dto) {
 
-        return calculationService.calculate(dto);
+        return protectionService.getProtectionKAndLeadEquivalent(dto);
     }
 
     @PostMapping("/k")
