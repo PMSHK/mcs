@@ -12,4 +12,12 @@ import java.io.Serializable;
 public class MaterialInfoDto implements Serializable {
     private String name;
     private Float density;
+
+    public String getMaterialName() {
+        return
+                new StringBuilder(name)
+                        .append(" ")
+                        .append(density)
+                        .toString();
+    }
 }

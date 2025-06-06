@@ -11,7 +11,7 @@ create table if not exists material(
 
 create table if not exists materials_lead_equivalent_storage(
     id bigint PRIMARY KEY GENERATED always as identity unique ,
-    thickness numeric(5,2) not null,
+    thickness numeric(7,2) not null,
     material_id bigint not null ,
     voltage_id bigint not null,
     material_lead_equivalent_id bigint not null,

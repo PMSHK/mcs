@@ -10,6 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
-    @Query("SELECT m FROM Material m LEFT JOIN FETCH m.materialThicknessList WHERE m.name = :name and m.density = :density")
+    @Query("SELECT m FROM Material m LEFT JOIN FETCH m.materialThicknessList WHERE m.name = :name and abs(m.density - :density)<0.01 ")
     Optional<Material> findByNameAndDensityWithThicknesses(@Param("name") String name, @Param("density") double density);
+
+
 }
