@@ -1,6 +1,7 @@
 package com.xrc.mcs.data.openings;
 
 import com.xrc.mcs.data.Opening;
+import lombok.Getter;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,8 @@ public class Shutter implements Opening {
     @Value(value = "${data.low_ren_limit}")
     private double lowLimit;
     private String leadProtectionLevel;
+    @Getter
+    private String name = "Ставни";
 
     @Override
     public String getLeadProtectionLevel(double calculatedLeadEquivalent, double precision) {
