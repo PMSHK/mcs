@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,5 +38,11 @@ public class MaterialManagerController {
         materialsManager.deleteMaterial(mat);
         return ResponseEntity.status(HttpStatus.OK)
                 .body("material " + mat.getMaterialName() + " has been deleted successfully");
+    }
+
+    @Operation(summary = "Update material name/density")
+    @PutMapping("/update")
+    public void updateMaterialNameDensity(@RequestBody PairMaterialInfoDto mat) {
+        materialsManager.updateMaterial(mat);
     }
 }
