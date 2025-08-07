@@ -1,11 +1,11 @@
 package com.xrc.mcs.services;
 
 import com.xrc.mcs.dto.MaterialInfoDto;
-import com.xrc.mcs.dto.PairMaterialInfoDto;
 import com.xrc.mcs.entity.Material;
 import com.xrc.mcs.entity.MaterialThickness;
 import com.xrc.mcs.repository.MaterialRepository;
 import com.xrc.mcs.repository.MaterialThicknessRepository;
+import com.xrc.mcs.repository.ProtectionCacheRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,8 @@ import java.util.List;
 public class MaterialsManager {
     private final MaterialRepository materialRepository;
     private final MaterialThicknessRepository thicknessRepository;
+    private final ProtectionService protectionService;
+    private final ProtectionCacheRepository pcRepository;
 
     @Transactional()
     public void addMaterialBasedOnMaterial(MaterialInfoDto childDto, MaterialInfoDto parentDto) {
@@ -40,26 +43,85 @@ public class MaterialsManager {
                     return thickness;
                 }).toList();
         thicknessRepository.saveAll(thicknessesStorage);
+        List<MaterialInfoDto> materials = protectionService.getAllMaterials();
+        MaterialInfoDto materialDto = new MaterialInfoDto(copyMaterial.getName(), copyMaterial.getDensity());
+        materials.add(materialDto);
+
+        pcRepository.saveToCache("materials", materials);
     }
 
     @Transactional
     public void deleteMaterial(MaterialInfoDto dto) {
         Material material = materialRepository.findByNameAndDensityWithThicknesses(dto.getName(), dto.getDensity()).orElseThrow(() -> new EntityNotFoundException(dto.getName() + " was not found"));
         materialRepository.delete(material);
+        updateDelMaterialInCache(
+                materials -> {
+                    materials.removeIf(mat -> mat.getName().equals(dto.getName()) && mat.getDensity().equals(dto.getDensity()));
+                });
     }
 
     @Transactional
-    public void updateMaterial(PairMaterialInfoDto dto) {
-        Material material = materialRepository.findByNameAndDensityWithThicknesses(dto.getSourceMaterial().getName(), dto.getSourceMaterial().getDensity()).orElseThrow(() -> new EntityNotFoundException(dto.getSourceMaterial().getName() + " was not found"));
-        if (!dto.getTargetMaterial().getDensity().equals(dto.getSourceMaterial().getDensity())) {
-            material.setDensity(dto.getTargetMaterial().getDensity());
-            material.getMaterialThicknessList().
-                    forEach(materialThickness -> materialThickness.setThickness(material.getDensity()*materialThickness.getThickness()/dto.getTargetMaterial().getDensity()));
+    public void updateMaterial(MaterialInfoDto dto, String matName, float matDensity) {
+        Material material = materialRepository.findByNameAndDensityWithThicknesses(matName, matDensity).orElseThrow(() -> new EntityNotFoundException(dto.getName() + " " + dto.getDensity() + " was not found"));
+        boolean isUpdated = false;
+
+        if (!dto.getDensity().equals(material.getDensity())) {
+            material.setDensity(dto.getDensity());
+            material.getMaterialThicknessList().forEach(materialThickness -> materialThickness.setThickness(matDensity * materialThickness.getThickness() / dto.getDensity()));
+            thicknessRepository.saveAll(material.getMaterialThicknessList());
+            isUpdated = true;
         }
-        if (StringUtils.hasText(dto.getTargetMaterial().getMaterialName()) && !dto.getTargetMaterial().getMaterialName().equals(dto.getSourceMaterial().getName())) {
-            material.setName(dto.getTargetMaterial().getMaterialName());
+        if (StringUtils.hasText(dto.getMaterialName()) && !dto.getName().equals(material.getName())) {
+            material.setName(dto.getMaterialName());
+            isUpdated = true;
         }
-        materialRepository.save(material);
+        if (isUpdated) {
+            materialRepository.save(material);
+            pcRepository.updateAnElementFromList("materials", MaterialInfoDto.class,
+                    mat ->
+                            mat.getName().equals(matName) && mat.getDensity() == matDensity,
+                    mat -> {
+                        mat.setName(dto.getName());
+                        mat.setDensity(dto.getDensity());
+
+                    }
+            );
+
+//            updateMaterialCache(matName,matDensity,dto);
+//            updateDelMaterialInCache(
+//                    materials -> {
+//                        materials.stream().filter(mat -> mat!=null &&
+//                                        mat.getName().equals(matName) &&
+//                                                mat.getDensity()==matDensity)
+//                                .findFirst()
+//                                .ifPresent(mat -> {
+//                                    mat.setName(dto.getName());
+//                                    mat.setDensity(dto.getDensity());
+//                                });
+//                    });
+        }
+
+    }
+
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
+//    public void updateMaterialCache(String matName, float matDensity, MaterialInfoDto dto) {
+//        updateDelMaterialInCache(materials -> {
+//            materials.stream().filter(mat -> mat!=null &&
+//                            mat.getName().equals(matName) &&
+//                            Math.abs(mat.getDensity()-matDensity)< 0.01f)
+//                    .findFirst()
+//                    .ifPresent(mat -> {
+//                        mat.setName(dto.getName());
+//                        mat.setDensity(dto.getDensity());
+//                    });
+//        });
+//    }
+
+    private void updateDelMaterialInCache(Consumer<List<MaterialInfoDto>> consumer) {
+        List<MaterialInfoDto> materials = protectionService.getAllMaterials();
+        log.debug("materials from cache within updating: {}", materials);
+        consumer.accept(materials);
+        pcRepository.saveToCache("materials", materials);
     }
 
 }

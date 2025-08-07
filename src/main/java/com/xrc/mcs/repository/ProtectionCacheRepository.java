@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 @Repository
 @RequiredArgsConstructor
@@ -69,6 +72,25 @@ public class ProtectionCacheRepository {
         } catch (RedisConnectionFailureException ex) {
             log.error("Redis connection failure", ex);
             return null;
+        }
+    }
+
+    public <T> void updateAnElementFromList(String key, Class<T> clazz, Predicate<T> filter, Consumer<T> action){
+        List<T> list = getListFromCache(key,clazz);
+        boolean updated = false;
+        AtomicReference<T> element = new AtomicReference<>();
+        if(list == null){
+            return;
+        } else {
+            updated = list.stream().filter(filter).findFirst().map(obj->{
+                action.accept(obj);
+                element.set(obj);
+                return true;
+            }).orElse(false);
+        }
+        if (updated){
+            saveToCache(key,list);
+            log.info("Object {} was updated successfully in redis cache {}", element.getClass().getSimpleName(), key);
         }
     }
 }

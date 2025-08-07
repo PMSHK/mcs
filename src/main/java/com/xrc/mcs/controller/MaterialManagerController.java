@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "materials_manager")
@@ -42,7 +43,9 @@ public class MaterialManagerController {
 
     @Operation(summary = "Update material name/density")
     @PutMapping("/update")
-    public void updateMaterialNameDensity(@RequestBody PairMaterialInfoDto mat) {
-        materialsManager.updateMaterial(mat);
+    public void updateMaterialNameDensity(@RequestBody MaterialInfoDto mat,
+                                          @RequestParam(name = "materialName") String materialName,
+                                          @RequestParam(name = "materialDensity") double density) {
+        materialsManager.updateMaterial(mat, materialName, (float) density);
     }
 }
