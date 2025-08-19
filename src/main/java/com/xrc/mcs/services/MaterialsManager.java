@@ -31,7 +31,6 @@ public class MaterialsManager {
         Material copyMaterial = new Material();
         copyMaterial.setName(childDto.getName());
         copyMaterial.setDensity(childDto.getDensity());
-        materialRepository.save(copyMaterial);
         List<MaterialThickness> thicknessesStorage = material.getMaterialThicknessList()
                 .stream()
                 .map(parent -> {
@@ -42,8 +41,13 @@ public class MaterialsManager {
                     thickness.setThickness(parent.getThickness() * (parent.getMaterial().getDensity() / copyMaterial.getDensity()));
                     return thickness;
                 }).toList();
+        materialRepository.save(copyMaterial);
         thicknessRepository.saveAll(thicknessesStorage);
-        List<MaterialInfoDto> materials = protectionService.getAllMaterials();
+        List<MaterialInfoDto> materials = pcRepository.getListFromCache("materials", MaterialInfoDto.class);
+
+        if (materials == null || materials.isEmpty()) {
+            materials = protectionService.getAllMaterials();
+        }
         MaterialInfoDto materialDto = new MaterialInfoDto(copyMaterial.getName(), copyMaterial.getDensity());
         materials.add(materialDto);
 
@@ -51,13 +55,11 @@ public class MaterialsManager {
     }
 
     @Transactional
-    public void deleteMaterial(MaterialInfoDto dto) {
-        Material material = materialRepository.findByNameAndDensityWithThicknesses(dto.getName(), dto.getDensity()).orElseThrow(() -> new EntityNotFoundException(dto.getName() + " was not found"));
+    public void deleteMaterial(String matName, float density) {
+        Material material = materialRepository.findByNameAndDensityWithThicknesses(matName, density).orElseThrow(() -> new EntityNotFoundException(matName + " " + density + " was not found"));
         materialRepository.delete(material);
-        updateDelMaterialInCache(
-                materials -> {
-                    materials.removeIf(mat -> mat.getName().equals(dto.getName()) && mat.getDensity().equals(dto.getDensity()));
-                });
+        pcRepository.deleteFromCache("materials", MaterialInfoDto.class,
+                f -> f.getName().equals(matName) && f.getDensity() == density);
     }
 
     @Transactional
@@ -72,7 +74,7 @@ public class MaterialsManager {
             isUpdated = true;
         }
         if (StringUtils.hasText(dto.getMaterialName()) && !dto.getName().equals(material.getName())) {
-            material.setName(dto.getMaterialName());
+            material.setName(dto.getName());
             isUpdated = true;
         }
         if (isUpdated) {

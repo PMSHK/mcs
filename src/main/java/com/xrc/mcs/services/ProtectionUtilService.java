@@ -64,7 +64,7 @@ public class ProtectionUtilService {
 
     public List<MaterialDto> getMaterialParamsOnVoltage(MaterialDto dto) {
         List<MaterialDto> materialDtoList = pcRepository.getListFromCache(dto.getName() + " params: " + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), MaterialDto.class);
-        if (materialDtoList == null) {
+        if (materialDtoList == null ) {
             log.info("get {} params from DB", dto.getName());
             log.info("started to calculate lead equivalent of {}", dto.getName());
             materialDtoList = new ArrayList<>();
@@ -105,7 +105,7 @@ public class ProtectionUtilService {
     }
 
     private Map<Double, List<MaterialDto>> getAllMatParamForVoltage(MaterialDto dto) {
-        Map<Double, List<MaterialDto>> matParametersList = pcRepository.getMapFromCache("MatParams: " + dto.getName() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), Double.class, MaterialDto.class);
+        Map<Double, List<MaterialDto>> matParametersList = pcRepository.getMapFromCache("MatParams: " + dto.getName() + dto.getDensity() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), Double.class, MaterialDto.class);
         if (matParametersList == null) {
             List<Object[]> results = new ArrayList<>();
             if (dto.getThickness() != 0) {
@@ -125,7 +125,7 @@ public class ProtectionUtilService {
                             dto.getLimit()
                     )).
                     collect(Collectors.groupingBy(MaterialDto::getVoltage, Collectors.toList()));
-            pcRepository.saveToCache("MatParams: " + dto.getName() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), matParametersList);
+            pcRepository.saveToCache("MatParams: " + dto.getName() + dto.getDensity() + dto.getVoltage() + dto.getThickness() + dto.getLeadEquivalent(), matParametersList);
         }
         return matParametersList;
 

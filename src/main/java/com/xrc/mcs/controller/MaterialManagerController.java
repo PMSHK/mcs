@@ -35,10 +35,11 @@ public class MaterialManagerController {
 
     @Operation(summary = "Delete a material")
     @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteMaterial(@RequestBody MaterialInfoDto mat) {
-        materialsManager.deleteMaterial(mat);
+    public ResponseEntity<String> deleteMaterial(@RequestParam(name = "materialName") String materialName,
+                                                 @RequestParam(name = "materialDensity") double density) {
+        materialsManager.deleteMaterial(materialName,(float) density);
         return ResponseEntity.status(HttpStatus.OK)
-                .body("material " + mat.getMaterialName() + " has been deleted successfully");
+                .body("material " + materialName + " " + density + " has been deleted successfully");
     }
 
     @Operation(summary = "Update material name/density")

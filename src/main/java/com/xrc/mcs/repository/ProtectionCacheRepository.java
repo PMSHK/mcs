@@ -45,7 +45,7 @@ public class ProtectionCacheRepository {
         }
     }
 
-    public <E,F> Map<E,List<F>> getMapFromCache(String key, Class<E> keyClass, Class<F> valueClass) {
+    public <E, F> Map<E, List<F>> getMapFromCache(String key, Class<E> keyClass, Class<F> valueClass) {
         try {
             String json = redisTemplate.opsForValue().get(key);
             Map<E, List<F>> obj = jsonConverter.fromJson(json, keyClass, valueClass);
@@ -75,22 +75,47 @@ public class ProtectionCacheRepository {
         }
     }
 
-    public <T> void updateAnElementFromList(String key, Class<T> clazz, Predicate<T> filter, Consumer<T> action){
-        List<T> list = getListFromCache(key,clazz);
+    public <T> void updateAnElementFromList(String key, Class<T> clazz, Predicate<T> filter, Consumer<T> action) {
+        List<T> list = getListFromCache(key, clazz);
         boolean updated = false;
         AtomicReference<T> element = new AtomicReference<>();
-        if(list == null){
+        if (list == null) {
             return;
         } else {
-            updated = list.stream().filter(filter).findFirst().map(obj->{
+            updated = list.stream().filter(filter).findFirst().map(obj -> {
                 action.accept(obj);
                 element.set(obj);
                 return true;
             }).orElse(false);
         }
-        if (updated){
-            saveToCache(key,list);
+        if (updated) {
+            saveToCache(key, list);
             log.info("Object {} was updated successfully in redis cache {}", element.getClass().getSimpleName(), key);
         }
     }
+
+    public <V> void deleteFromCache(String key, Class<V> valueClass, Predicate<V> filter) {
+        List<V> list = getListFromCache(key, valueClass);
+        if (list == null) {
+            return;
+        } else {
+            list.removeIf(filter);
+            saveToCache(key, list);
+            log.info("Object {} was deleted successfully in redis cache {}", list.getClass().getSimpleName(), key);
+        }
+//        Map<K, List<V>> map = getMapFromCache(key, keyClass, valueClass);
+//        if (map == null) {
+//            log.warn("Object {} was not found in redis cache {} and can not be deleted", keyClass.getSimpleName(), keyClass);
+//        } else {
+//            for (Map.Entry<K, List<V>> m : map.entrySet()) {
+//                List<V> list = m.getValue();
+//                if (list != null) {
+//                    for (V v : list) {
+//                        action.accept(v);
+//                    }
+//                }
+//            }
+//        }
+    }
 }
+
